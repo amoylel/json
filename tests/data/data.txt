@@ -1,0 +1,8 @@
+nativejson-benchmark/canada.json
+nativejson-benchmark/citm_catalog.json
+nativejson-benchmark/twitter.json
+nativejson-benchmark/all_unicode.json
+numbers/floats.json
+numbers/signed_ints.json
+numbers/unsigned_ints.json
+fails/sample.json

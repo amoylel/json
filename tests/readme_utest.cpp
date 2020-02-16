@@ -1,27 +1,15 @@
-#### Description
-This is a high-performance JSON library written in C++ 11 with the following features:
-1. **header only**: no third-party dependencies;
-2. **fast**: parsing speed is half of simdjson, much faster than rapidjson;
-2. **simple api**: the common interface is similar to nlohmann / json;
-3. **modularity**: You can customize various sub-modules to meet customized needs;
-4. **json value type extension**: You can extend the new JSON basic type by yourself;
-5. **support types serialization**: You can use JSON as an any class;
-#### Supported compilers
-+  GCC 4.8.5 or later 
-+  Clang 3.4 or later
-+  Microsoft Visual C++ 2015 or later
-#### Performance 
-+  Run the test program in the "./tests" directory to see the performance comparison between this library and rapidjson;
-+  Direct manipulation of raw data can also improve performance
+#include "./utest.hpp"
 
-#### Examples
-Read the test code in the tests directory for more usage. 
-Basic usage:
-```C++
-#include "json.hpp"
-#include <iostream>
+#include "./../json.hpp"
+#include <vector>
+#include <map>
+#include <set>
 
-int main(int argc, char** argv) {
+TEST(readme, constructor) {
+
+}
+
+TEST(readme, Basic_Usage) {
     amo::json json_empty;                               // json_value_empty
     amo::json json_string = "ttt";                      // json_value_string
     amo::json json_number = 12.33;                      // json_value_float
@@ -94,16 +82,7 @@ int main(int argc, char** argv) {
     json2.transfer<amo::json::key_type>([](const amo::json::key_type & key, amo::json & p) {
         std::cout << key << ": " << p << std::endl;
     });
-
-    
-    return 0;
 }
-
-```
-
-Custom json value type:
-```C++
-#include "json.hpp"
 
 class custom_json_value {
 public:
@@ -116,9 +95,8 @@ public:
     std::string m_str;
 };
 
-
-int main(int argc, char** argv){
-     amo::json json = custom_json_value("123");          // construct json with custom json value
+TEST(readme, custom_json_value) {
+    amo::json json = custom_json_value("123");          // construct json with custom json value
     bool b = json.is(custom_json_value::__json_type_value__);     //
     std::cout << "json value type: " << b << std::endl;
     custom_json_value value = json;                     // get custom_json_value from json
@@ -135,13 +113,8 @@ int main(int argc, char** argv){
     json["custom_json_value"] = value;
     json["custom_json_value3"] = value3;
     std::cout << json.to_string() << std::endl;
-
-    return 0;
 }
-```
-Serialization / Deserialization:
-```C++
-#include "json.hpp"
+
 #include <iostream>
 
 // simplest class
@@ -170,15 +143,16 @@ public:
 // use macro
 class custom_json_object2 {
 public:
-    typedef amo::json JsonType;     // require,  json type
+    typedef amo::json JsonType;     // require
 public:
     custom_json_object2() { m_int = 3; }
     
     AMO_ENTITY_ARGS_GET_BEGIN_WITH_JSON_CONSTRUCTOR(custom_json_object2)
-    AMO_ENTITY_ARGS_GET(m_int)      // get value from json["m_int"] if json["m_int"] is not empty
+    AMO_ENTITY_ARGS_GET(m_int)  // get value from json["m_int"]
     AMO_ENTITY_ARGS_GET(m_int2)
     AMO_ENTITY_ARGS_GET(m_vec)
     AMO_ENTITY_ARGS_GET(m_custom_json_object)
+    
     AMO_ENTITY_ARGS_GET_END()
     
     AMO_ENTITY_ARGS_SET_BEGIN(custom_json_object2)
@@ -188,16 +162,14 @@ public:
     AMO_ENTITY_ARGS_SET(m_custom_json_object)
     AMO_ENTITY_ARGS_SET_END()
     
-    int m_int;      // pod
-    std::shared_ptr<int> m_int2;        // smart ptr
-    std::vector<int> m_vec;             // stl container
-    std::shared_ptr<custom_json_object>  m_custom_json_object;  // smart ptr  , class 
+    int m_int;
+    std::shared_ptr<int> m_int2;
+    std::vector<int> m_vec;
+    std::shared_ptr<custom_json_object>  m_custom_json_object;
 };
 
-
-
-int main(int argc, char** argv){
-     custom_json_object json_class;
+TEST(readme, custom_json_object) {
+    custom_json_object json_class;
     json_class.m_str = "3";
     amo::json simplejson = json_class;
     std::cout << simplejson << std::endl;       // {"m_str":"3"}
@@ -218,71 +190,6 @@ int main(int argc, char** argv){
     std::shared_ptr<custom_json_object2> c3 = json;
     std::cout << c3->m_custom_json_object->m_str << std::endl; // 567
     std::cout << c3->to_string() << std::endl;//{"m_int":3,"m_int2":3,"m_vec":[1,2],"m_custom_json_object":{"m_str":"657"}}
- 
-    return 0;
 }
 
 
-```
-Use STL containers:
-```C++
-// construct from stl container
-std::vector<int> vec{1,2,3,4,5,6,7};
-amo::json json_vec = vec;  // json_value_array;
-amo::json json_list = std::list<int>{1,2,3,4};  // json_value_array;
-amo::json json_set = std::set<int>{1,2,3,4}; // json_value_array;
-amo::json json_deque = std::deque<int>{1,2,3,4}; // json_value_array;
-amo::json json_object_map = std::map<std::string, int>{{"a",1}, {"b", 2}}; // json_value_object
-amo::json json_arr_map = std::map<int, int>{{1,1},{1,1}}; // json_value_array
-amo::json json_vec2 = std::vector<amo::json::object_type>{"1",2,false, 33}
-
-std::vector<int> my_vec = json_vec;    // ok
-    
-```
- 
-You can directly use native data to improve program performance:
-```C++
-amo::json json;
-for (int i =0; i < 10000; ++i) {
-    json.push_back(i);
-}
-
-// Use the find function to avoid temporary JSON objects
-for(int i=0; i < 10000; ++i){
-    json.find(i).set_value(i+1, json.get_allocator());  // 
-}
-// Use the get_data_object function to use native data directly.
-for(int i=0; i < 10000; ++i){
-    json.get_data_object().d.a.elements.at(i) = i+2;
-}
-```
-
-#### Defects
-1. The program uses pre-allocated memory to improve Performance, it will waste some memory; 
-2. JSON will not release any memory during the life cycle, and it will also waste some memory; 
-3. When parsing a JSON string, the keys in key-value pairs are not processed by default; 
-```C++
-std::string sb = R"({"\u4E2D\u6587": "\u4e2d\u6587\u5b57\u7b26\u4e32"})";   // u8 {"中文": "中文字符串"}
-amo::json json = amo::string_reader(sb);
-std::cout << json.to_string() << std::endl; // u8 {"\u4E2D\u6587":"中文字符串"},  key unchanged
-```
-4.  When you call the function operator ["key"], if the key-value does not exist, a empty value will be created. This feature will cause the return value of the size function to be inaccurate. You can use has ( "key") to determine whether the corresponding key exists; 
-```C++
-amo::json json;
-json["a"];
-json["b"] = 1;
-std::cout << json.size() << std::endl;      //  2
-std::cout << json.to_string() << std::endl; // {"b": 1}
-std::cout << json.has("a") << std::endl;    // true
-std::cout << json.has("c") << std::endl;    // false
-
-```
-5. The program uses the fast insert mode by default when parsing a JSON string. It may behave inconsistently when there are duplicate key values in the string. 16 key-values are inserted using vector.push_back, and later key-values are used map.insert; you can modify the configuration to filter duplicate key-value pairs;  
-```C++
-std::string str = R"({"a": 1, "a": 2, "a": 3, "a":4, "a": 5, "a": 6, "a": 7, "a": 8, "a": 9, "a": 10, "a": 11, "a": 12, "a": 13, "a": 14, "a": 15, "a": 16, "a": 17, "a": 18, "a": 19, "a": 20 , "b": 1, "b":2  })";
-amo::json json = amo::string_reader(str);
-std::cout << json["a"] << std::endl;         // 1  index < 16 use vector.push_back
-std::cout << json["b"] << std::endl;         // 2  index >= 16 use map.insert()
-std::cout << json.to_string() << std::endl;  // {"a": 1, "a": 2, "a": 3, "a":4, "a": 5, "a": 6, "a": 7, "a": 8, "a": 9, "a": 10, "a": 11, "a": 12, "a": 13, "a": 14, "a": 15, "a": 16, "a": 20, "b":2  }
-
-```
